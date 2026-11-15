@@ -41,9 +41,10 @@ builds it in the background:
 Set `BILISUM_HOME` to relocate both, or override the interpreter with the
 `pythonPath` config field.
 
-> Package managers may block the `prepare` script. Environment creation does not
-> depend on it: the plugin bootstraps from `apply()` on first load. If your setup
-> reports a pending build script, you can either approve it or simply ignore it.
+> `prepare` only reports readiness; it never downloads anything during install.
+> The environment itself is built from `apply()` on first use, in the background
+> and without a console window. If your package manager blocks the script, the
+> plugin still heals on first load.
 
 ## Usage
 

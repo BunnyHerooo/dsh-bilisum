@@ -32,14 +32,17 @@ const stampFile = path.join(venvDir, '.requirements-hash');
 
 const log = (message) => console.log(`[bilisum-setup] ${message}`);
 
+/** Windows: never flash a console window for the helper processes. */
+const HIDE = { windowsHide: true };
+
 function run(command, args, options = {}) {
   log(`$ ${command} ${args.join(' ')}`);
-  const result = spawnSync(command, args, { stdio: 'inherit', ...options });
+  const result = spawnSync(command, args, { stdio: 'inherit', ...HIDE, ...options });
   return result.status === 0;
 }
 
 function capture(command, args) {
-  const result = spawnSync(command, args, { encoding: 'utf8' });
+  const result = spawnSync(command, args, { encoding: 'utf8', ...HIDE });
   return { ok: result.status === 0, out: `${result.stdout ?? ''}${result.stderr ?? ''}`.trim() };
 }
 
@@ -66,7 +69,9 @@ function findSystemPython() {
 
 function requirementsHash() {
   try {
-    return createHash('sha256').update(readFileSync(requirements)).digest('hex').slice(0, 16);
+    // Normalize line endings so a CRLF/LF flip never forces a reinstall.
+    const text = readFileSync(requirements, 'utf8').replace(/\r\n/g, '\n');
+    return createHash('sha256').update(text).digest('hex').slice(0, 16);
   } catch {
     return 'missing';
   }
@@ -123,6 +128,19 @@ function setupWithUv() {
 function main() {
   mkdirSync(home, { recursive: true });
   const wanted = requirementsHash();
+  const checkOnly = process.argv.includes('--check');
+
+  if (checkOnly) {
+    // `prepare` runs during installs; never download or install there.
+    const ready = existsSync(pythonExe)
+      && existsSync(stampFile)
+      && readFileSync(stampFile, 'utf8').trim() === wanted
+      && pythonWorks(pythonExe);
+    log(ready
+      ? `环境已就绪：${pythonExe}`
+      : '环境尚未就绪，将在插件首次加载时自动安装');
+    return 0;
+  }
 
   if (existsSync(pythonExe) && pythonWorks(pythonExe)) {
     if (existsSync(stampFile) && readFileSync(stampFile, 'utf8').trim() === wanted) {

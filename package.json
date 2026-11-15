@@ -25,8 +25,9 @@
     "LICENSE"
   ],
   "scripts": {
-    "prepare": "node scripts/setup-env.js",
-    "prepack": "node scripts/setup-env.js",
+    "prepare": "node scripts/setup-env.js --check",
+    "prepack": "node scripts/setup-env.js --check",
+    "setup": "node scripts/setup-env.js",
     "check": "node --check lib/index.js && node --check client.js"
   },
   "keywords": [
