@@ -643,6 +643,7 @@ window.__ModuleLoader__.load({
       const [discoverPicked, setDiscoverPicked] = React.useState([]);
       const [discoverLoaded, setDiscoverLoaded] = React.useState(false);
       const [kindOpen, setKindOpen] = React.useState(false);
+      const [cookieOpen, setCookieOpen] = React.useState(false);
       const [outputEditing, setOutputEditing] = React.useState(false);
       const [outputDraft, setOutputDraft] = React.useState('');
       const [outputHint, setOutputHint] = React.useState('');
@@ -651,13 +652,21 @@ window.__ModuleLoader__.load({
       const progressTimer = React.useRef(null);
       const kindRef = React.useRef(null);
       const queryRef = React.useRef(null);
+      const cookieInitRef = React.useRef(false);
 
       const loadStatus = React.useCallback(() => {
         let cancelled = false;
         setStatusError('');
         callJson('/bilisum/status')
           .then((payload) => {
-            if (!cancelled) setStatus(payload);
+            if (cancelled) return;
+            setStatus(payload);
+            // A fresh install has no cookie yet: open the field once so the
+            // user sees where it goes, then let them collapse it.
+            if (!cookieInitRef.current) {
+              cookieInitRef.current = true;
+              if (!payload?.cookieConfigured) setCookieOpen(true);
+            }
           })
           .catch((err) => {
             if (!cancelled) setStatusError(err.message);
@@ -726,6 +735,7 @@ window.__ModuleLoader__.load({
         setCookie('');
         setCookieDirty(false);
         setLinks('');
+        setCookieOpen(false);
         setDiscoverItems([]);
         setDiscoverPage(0);
         setDiscoverPicked([]);
@@ -1231,7 +1241,12 @@ window.__ModuleLoader__.load({
             title: t('refreshPluginHint'),
             onClick: refreshPlugin,
           }, t('refreshPlugin')),
-          h('span', { className: 'bilisum-label' }, t('cookieLabel')),
+          h('button', {
+            type: 'button',
+            className: 'bilisum-button bilisum-button-quiet',
+            'aria-expanded': cookieOpen ? 'true' : 'false',
+            onClick: () => setCookieOpen((open) => !open),
+          }, t('cookieLabel')),
           h('span', { className: cookieBadge.className }, cookieBadge.text),
           h('button', {
             type: 'button',
@@ -1329,33 +1344,35 @@ window.__ModuleLoader__.load({
           )
           : null,
 
-        h('div', { className: 'bilisum-card' },
-          h('div', { className: 'bilisum-row' },
-            h('input', {
-              className: 'bilisum-input bilisum-input-grow',
-              type: 'password',
-              value: cookie,
-              placeholder: t('cookiePlaceholder'),
-              spellCheck: false,
-              onChange: (event) => {
-                setCookie(event.target.value);
-                setCookieDirty(true);
-              },
-            }),
-            h('button', {
-              type: 'button',
-              className: 'bilisum-button',
-              onClick: saveCookie,
-              disabled: !cookieDirty || !cookie.trim(),
-            }, t('save')),
-            h('button', {
-              type: 'button',
-              className: 'bilisum-button',
-              onClick: clearCookie,
-              disabled: !cookieOk && !cookie,
-            }, t('clear')),
-          ),
-        ),
+        cookieOpen
+          ? h('div', { className: 'bilisum-card' },
+            h('div', { className: 'bilisum-row' },
+              h('input', {
+                className: 'bilisum-input bilisum-input-grow',
+                type: 'password',
+                value: cookie,
+                placeholder: t('cookiePlaceholder'),
+                spellCheck: false,
+                onChange: (event) => {
+                  setCookie(event.target.value);
+                  setCookieDirty(true);
+                },
+              }),
+              h('button', {
+                type: 'button',
+                className: 'bilisum-button',
+                onClick: saveCookie,
+                disabled: !cookieDirty || !cookie.trim(),
+              }, t('save')),
+              h('button', {
+                type: 'button',
+                className: 'bilisum-button',
+                onClick: clearCookie,
+                disabled: !cookieOk && !cookie,
+              }, t('clear')),
+            ),
+          )
+          : null,
 
         h('div', { className: 'bilisum-tabs', role: 'tablist' },
           h('button', {
