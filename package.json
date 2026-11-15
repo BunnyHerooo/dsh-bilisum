@@ -1,6 +1,6 @@
 {
   "name": "dsh-bilisum",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "BiliSum: fetch Bilibili subtitles and videos from a chat message or the built-in search list, summarize them, and write a Markdown report.",
   "type": "module",
   "main": "lib/index.js",

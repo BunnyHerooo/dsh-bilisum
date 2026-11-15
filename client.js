@@ -62,6 +62,8 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-secondary); cursor: pointer;
 }
 .bilisum-log-toggle:hover { color: var(--dsw-alias-label-primary); }
+.bilisum-cancel { color: var(--dsw-alias-state-error-primary); }
+.bilisum-cancel:hover { color: var(--dsw-alias-state-error-primary); opacity: .75; }
 .bilisum-card-log .bilisum-log { margin: 0 14px 12px; }
 .bilisum-progress-inline {
   display: inline-flex; align-items: center; gap: 8px; transition: opacity .35s ease;
@@ -389,6 +391,9 @@ window.__ModuleLoader__.load({
         videosLabel: 'Cached transcripts',
         failuresLabel: 'Failed',
         copyHint: 'Copy the prompt',
+        reportGenerate: 'Generate report',
+        reportBusy: 'Summarizing…',
+        cancelTask: 'Cancel',
         copyPrompt: 'Summarize these fetched Bilibili videos',
         copied: 'Copied',
         needLinks: 'Paste at least one Bilibili link first.',
@@ -489,6 +494,9 @@ window.__ModuleLoader__.load({
         videosLabel: '已缓存字幕',
         failuresLabel: '解析失败',
         copyHint: '复制指令',
+        reportGenerate: '生成报告',
+        reportBusy: '总结中…',
+        cancelTask: '取消',
         copyPrompt: '请总结这些已抓取的B站视频',
         copied: '已复制',
         needLinks: '请先粘贴至少一个 B站 链接。',
@@ -644,6 +652,9 @@ window.__ModuleLoader__.load({
       const [discoverLoaded, setDiscoverLoaded] = React.useState(false);
       const [kindOpen, setKindOpen] = React.useState(false);
       const [cookieOpen, setCookieOpen] = React.useState(false);
+      const [reportBusy, setReportBusy] = React.useState(false);
+      const [reportPath, setReportPath] = React.useState('');
+      const [reportError, setReportError] = React.useState('');
       const [outputEditing, setOutputEditing] = React.useState(false);
       const [outputDraft, setOutputDraft] = React.useState('');
       const [outputHint, setOutputHint] = React.useState('');
@@ -745,6 +756,9 @@ window.__ModuleLoader__.load({
         setKindOpen(false);
         setOutputEditing(false);
         setOutputHint('');
+        setReportBusy(false);
+        setReportPath('');
+        setReportError('');
         offsetRef.current = 0;
         setLogOpen(false);
         loadStatus();
@@ -783,6 +797,29 @@ window.__ModuleLoader__.load({
         }
       };
 
+      /** Abort the running batch (worker subprocess included). */
+      const cancelJob = async () => {
+        try {
+          await callJson('/bilisum/cancel', { method: 'POST', body: '{}' });
+        } catch (err) {
+          setError(err.message);
+        }
+      };
+
+      /** Summarize the cached transcripts with the model and write the report. */
+      const generateReport = async () => {
+        setReportBusy(true);
+        setReportError('');
+        setReportPath('');
+        try {
+          const payload = await callJson('/bilisum/report', { method: 'POST', body: '{}' });
+          setReportPath(payload.path ?? '');
+        } catch (err) {
+          setReportError(err.message);
+        } finally {
+          setReportBusy(false);
+        }
+      };
       /** Show the finished progress line briefly, then fade it away. */
       const settleProgress = (next) => {
         setProgress(next);
@@ -1571,6 +1608,13 @@ window.__ModuleLoader__.load({
           h('div', { className: 'bilisum-log-head' },
             h('span', { className: 'bilisum-log-title' }, t('logsLabel')),
             h('span', { className: 'bilisum-muted' }, t('logCount').replace('{count}', String(logs.length))),
+            running
+              ? h('button', {
+                type: 'button',
+                className: 'bilisum-log-toggle bilisum-cancel',
+                onClick: () => void cancelJob(),
+              }, t('cancelTask'))
+              : null,
             h('button', {
               type: 'button',
               className: 'bilisum-log-toggle',
@@ -1689,10 +1733,29 @@ window.__ModuleLoader__.load({
               ? h('div', { className: 'bilisum-row' },
                 h('button', {
                   type: 'button',
-                  className: 'bilisum-button',
+                  className: 'bilisum-button bilisum-button-primary',
+                  disabled: reportBusy,
+                  onClick: () => void generateReport(),
+                }, reportBusy ? t('reportBusy') : t('reportGenerate')),
+                reportPath
+                  ? h('button', {
+                    type: 'button',
+                    className: 'bilisum-link',
+                    onClick: () => reveal(reportPath),
+                  }, t('openFile'))
+                  : null,
+                h('button', {
+                  type: 'button',
+                  className: 'bilisum-button bilisum-button-quiet',
                   onClick: copyPrompt,
                 }, copied ? t('copied') : t('copyHint')),
               )
+              : null,
+            reportPath
+              ? h('div', { className: 'bilisum-path', title: reportPath }, reportPath)
+              : null,
+            reportError
+              ? h('div', { className: 'bilisum-muted bilisum-log-error' }, reportError)
               : null,
           )
           : null,

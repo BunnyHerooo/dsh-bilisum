@@ -14,7 +14,11 @@ report.
   are fetched. A link with `?p=5` preselects P5.
 - **Optional video download** — yt-dlp with a codec preference (H.264 first) and
   audio-only mode; per-item status with one-click retry for failures.
-- **Agent tools** — `bilisum_fetch` and `bilisum_write_report` let the chat model
+- **One-click report** — summarize the cached transcripts with the profile's model
+  and write the Markdown report from inside the panel.
+- **Cancel a running batch** — stop a long collection mid-download.
+- **Bangumi / movie links** — `bangumi/play/ss…` and `…/ep…` pages resolve to
+  their video id, so films and series work like any other video.- **Agent tools** — `bilisum_fetch` and `bilisum_write_report` let the chat model
   fetch and summarize without touching the panel.
 - **Portable state** — the Python environment and the default output live in
   `~/.dsh/bilisum`, never inside the package.
