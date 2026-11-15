@@ -15,7 +15,10 @@ report.
 - **Optional video download** — yt-dlp with a codec preference (H.264 first) and
   audio-only mode; per-item status with one-click retry for failures.
 - **One-click report** — summarize the cached transcripts with the profile's model
-  and write the Markdown report from inside the panel.
+  and write the Markdown report from inside the panel. Pick the model from the
+  split button, or import any OpenAI-compatible endpoint; the structure (pyramid,
+  SCQA, Feynman, ...) is chosen automatically from the content type.
+- **Remembered settings** — the output directory survives plugin reloads and restarts.
 - **Cancel a running batch** — stop a long collection mid-download.
 - **Bangumi / movie links** — `bangumi/play/ss…` and `…/ep…` pages resolve to
   their video id, so films and series work like any other video.- **Agent tools** — `bilisum_fetch` and `bilisum_write_report` let the chat model

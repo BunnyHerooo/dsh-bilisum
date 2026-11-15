@@ -51,6 +51,13 @@ window.__ModuleLoader__.load({
   background: var(--dsw-alias-bg-layer-1); padding: 14px;
   display: flex; flex-direction: column; gap: 10px;
 }
+.bilisum-content > * { flex: 0 0 auto; }
+.bilisum-result { height: max-content; align-self: flex-start; }
+.bilisum-result > .bilisum-path { flex: none; }
+.bilisum-path-line { flex: none; }
+.bilisum-path-row { flex-wrap: nowrap; }
+.bilisum-path-row > .bilisum-muted { flex: none; }
+.bilisum-path-row .bilisum-button { flex: none; }
 .bilisum-card-log { padding: 0; gap: 0; }
 .bilisum-log-head {
   display: flex; align-items: center; justify-content: flex-start; gap: 16px;
@@ -62,6 +69,28 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-secondary); cursor: pointer;
 }
 .bilisum-log-toggle:hover { color: var(--dsw-alias-label-primary); }
+.bilisum-split {
+  position: relative; display: inline-flex; align-items: stretch; flex: none;
+  background: var(--dsw-alias-brand-primary); border-radius: 8px; color: #fff;
+  transition: box-shadow .15s ease;
+}
+.bilisum-split:hover { box-shadow: inset 0 0 0 0.5px rgba(255, 255, 255, 0.45); }
+.bilisum-split-main,
+.bilisum-split-toggle {
+  border: none; background: transparent; color: inherit;
+  font: inherit; font-size: 13px; cursor: pointer; line-height: 1;
+}
+.bilisum-split-main { padding: 8px 14px; border-radius: 8px 0 0 8px; }
+.bilisum-split-toggle {
+  padding: 0 6px; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 0 8px 8px 0;
+}
+.bilisum-split-main:disabled,
+.bilisum-split-toggle:disabled { opacity: .55; cursor: default; }
+.bilisum-caret { font-size: 9px; line-height: 1; opacity: .85; }
+.bilisum-menu-models { min-width: 240px; max-height: 320px; overflow-y: auto; }
+.bilisum-menu-sep { height: 0.5px; margin: 4px 6px; background: var(--dsw-alias-border-l1); }
+.bilisum-import { margin-top: 4px; }
 .bilisum-cancel { color: var(--dsw-alias-state-error-primary); }
 .bilisum-cancel:hover { color: var(--dsw-alias-state-error-primary); opacity: .75; }
 .bilisum-card-log .bilisum-log { margin: 0 14px 12px; }
@@ -182,7 +211,7 @@ window.__ModuleLoader__.load({
 }
 .bilisum-path {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px;
-  color: var(--dsw-alias-label-secondary); flex: 1 1 220px; min-width: 0;
+  color: var(--dsw-alias-label-secondary); flex: 1 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .bilisum-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
@@ -279,7 +308,7 @@ window.__ModuleLoader__.load({
 .bilisum-toolbar-search:disabled { opacity: .5; cursor: default; }
 
 /* Discover list */
-.bilisum-discover { display: flex; flex-direction: column; gap: 10px; min-height: 260px; }
+.bilisum-discover { display: flex; flex-direction: column; gap: 10px; }
 .bilisum-discover-list {
   display: flex; flex-direction: column; gap: 2px; max-height: 360px; overflow-y: auto;
   border: 0.5px solid var(--dsw-alias-border-l1); border-radius: 8px; padding: 4px;
@@ -392,6 +421,20 @@ window.__ModuleLoader__.load({
         failuresLabel: 'Failed',
         copyHint: 'Copy the prompt',
         reportGenerate: 'Generate report',
+        reportModel: 'Choose the summarizing model',
+        reportStyle: 'Summary style',
+        style_general: 'General',
+        style_pyramid: 'Pyramid',
+        style_feynman: 'Feynman',
+        style_scqa: 'SCQA',
+        style_cornell: 'Cornell',
+        style_prep: 'PREP',
+        style_story: 'Story arc',
+        importApi: 'Import an API…',
+        importApiTitle: 'Import an OpenAI-compatible API',
+        importName: 'Name (optional)',
+        importModel: 'Model name',
+        importHint: 'The base URL must be OpenAI-compatible (/chat/completions); the key is stored in the DSH credential store.',
         reportBusy: 'Summarizing…',
         cancelTask: 'Cancel',
         copyPrompt: 'Summarize these fetched Bilibili videos',
@@ -495,6 +538,20 @@ window.__ModuleLoader__.load({
         failuresLabel: '解析失败',
         copyHint: '复制指令',
         reportGenerate: '生成报告',
+        reportModel: '选择总结模型',
+        reportStyle: '总结风格',
+        style_general: '通用',
+        style_pyramid: '金字塔',
+        style_feynman: '费曼',
+        style_scqa: 'SCQA',
+        style_cornell: '康奈尔',
+        style_prep: 'PREP',
+        style_story: '起承转合',
+        importApi: '导入 API…',
+        importApiTitle: '导入 OpenAI 兼容接口',
+        importName: '名称（可选）',
+        importModel: '模型名',
+        importHint: '接口需兼容 OpenAI（/chat/completions）；API Key 存入 DSH 凭据库。',
         reportBusy: '总结中…',
         cancelTask: '取消',
         copyPrompt: '请总结这些已抓取的B站视频',
@@ -608,6 +665,19 @@ window.__ModuleLoader__.load({
         : `${Math.round(value / 1024 ** 2)} MB`;
     }
 
+    /**
+     * Compact a long absolute path for display: keep the last two segments
+     * (`subtitles\file.md`, `videos\file.mp4`) and elide the rest with `…`.
+     * The full path stays available through the element's `title`.
+     */
+    function shortPath(value) {
+      const text = String(value ?? '');
+      if (text.length <= 64) return text;
+      const parts = text.split(/[\\/]+/).filter(Boolean);
+      if (parts.length <= 2) return `…${text.slice(-60)}`;
+      return `…\\${parts.slice(-2).join('\\')}`;
+    }
+
     // ------------------------------------------------------------------
     // Console: status, Cookie, links, live log, results.
     // Rendered by the main panel and by the Settings page.
@@ -652,6 +722,11 @@ window.__ModuleLoader__.load({
       const [discoverLoaded, setDiscoverLoaded] = React.useState(false);
       const [kindOpen, setKindOpen] = React.useState(false);
       const [cookieOpen, setCookieOpen] = React.useState(false);
+      const [models, setModels] = React.useState({ builtin: [], imported: [], default: null });
+      const [reportTarget, setReportTarget] = React.useState(null);
+      const [modelOpen, setModelOpen] = React.useState(false);
+      const [importOpen, setImportOpen] = React.useState(false);
+      const [importForm, setImportForm] = React.useState({ label: '', baseURL: '', model: '', apiKey: '' });
       const [reportBusy, setReportBusy] = React.useState(false);
       const [reportPath, setReportPath] = React.useState('');
       const [reportError, setReportError] = React.useState('');
@@ -664,7 +739,6 @@ window.__ModuleLoader__.load({
       const kindRef = React.useRef(null);
       const queryRef = React.useRef(null);
       const cookieInitRef = React.useRef(false);
-
       const loadStatus = React.useCallback(() => {
         let cancelled = false;
         setStatusError('');
@@ -710,6 +784,7 @@ window.__ModuleLoader__.load({
           setJobId('');
           setResult(job.result ?? null);
           setError(job.error ?? '');
+          if (job.report?.path) setReportPath(job.report.path);
           if (job.progress) settleProgress(job.progress);
         } catch {
           // No route or an empty Host simply means there is nothing to adopt.
@@ -797,6 +872,45 @@ window.__ModuleLoader__.load({
         }
       };
 
+      const menuOptionClass = (active) => (active ? 'bilisum-menu-option is-active' : 'bilisum-menu-option');
+
+      const loadModels = React.useCallback(async () => {
+        try {
+          const payload = await callJson('/bilisum/models');
+          setModels({
+            builtin: Array.isArray(payload.builtin) ? payload.builtin : [],
+            imported: Array.isArray(payload.imported) ? payload.imported : [],
+            default: payload.default ?? null,
+          });
+        } catch {
+          // keep the previous list when the route is unavailable
+        }
+      }, []);
+
+      React.useEffect(() => {
+        void loadModels();
+      }, [loadModels]);
+
+      /** Import an OpenAI-compatible endpoint into the model list. */
+      const importModel = async () => {
+        try {
+          const payload = await callJson('/bilisum/models/import', {
+            method: 'POST',
+            body: JSON.stringify(importForm),
+          });
+          setModels({
+            builtin: payload.builtin ?? [],
+            imported: payload.imported ?? [],
+            default: payload.default ?? null,
+          });
+          const added = (payload.imported ?? []).slice(-1)[0];
+          if (added) setReportTarget({ kind: 'imported', id: added.id });
+          setImportOpen(false);
+          setImportForm({ label: '', baseURL: '', model: '', apiKey: '' });
+        } catch (err) {
+          setReportError(err.message);
+        }
+      };
       /** Abort the running batch (worker subprocess included). */
       const cancelJob = async () => {
         try {
@@ -812,7 +926,10 @@ window.__ModuleLoader__.load({
         setReportError('');
         setReportPath('');
         try {
-          const payload = await callJson('/bilisum/report', { method: 'POST', body: '{}' });
+          const payload = await callJson('/bilisum/report', {
+            method: 'POST',
+            body: JSON.stringify({ target: reportTarget, style: 'auto' }),
+          });
           setReportPath(payload.path ?? '');
         } catch (err) {
           setReportError(err.message);
@@ -982,6 +1099,8 @@ window.__ModuleLoader__.load({
               if (payload.progress) settleProgress(payload.progress);
               // A finished batch drops its search picks so the list is reusable.
               setDiscoverPicked([]);
+              // Let the result card take the focus: the log collapses to one line.
+              setLogOpen(false);
               return;
             }
             timer = setTimeout(poll, 500);
@@ -1245,13 +1364,17 @@ window.__ModuleLoader__.load({
         setRetryingKeys((previous) => previous.filter((key) => !keys.includes(key)));
       };
 
+      // The log card only exists when there is something to show: a running
+      // batch, some log lines, or a finished result that keeps its entry.
+      const shouldShowLog = running || probing || logs.length > 0 || result !== null;
+
       const rowStatus = (row) => {
         if (retryingKeys.includes(row.key)) return 'retrying';
         const status = row.download?.status;
         if (status === 'success' || status === 'failed') return status;
         // A row without a download record only means "waiting" when this batch
         // actually asked for downloads; otherwise the extract itself succeeded.
-        return result?.downloadRequested === true ? 'pending' : 'ok';
+        return result?.downloadRequested === true ? 'pending' : 'success';
       };
 
       const configured = status?.cookieConfigured === true;
@@ -1604,7 +1727,8 @@ window.__ModuleLoader__.load({
           )
           : null,
 
-        h('div', { className: 'bilisum-card bilisum-card-log' },
+        shouldShowLog
+          ? h('div', { className: 'bilisum-card bilisum-card-log' },
           h('div', { className: 'bilisum-log-head' },
             h('span', { className: 'bilisum-log-title' }, t('logsLabel')),
             h('span', { className: 'bilisum-muted' }, t('logCount').replace('{count}', String(logs.length))),
@@ -1640,10 +1764,11 @@ window.__ModuleLoader__.load({
                   className: levelClass(entry.level),
                 }, `[${String(entry.level ?? 'info').toUpperCase()}] ${entry.message}`)))
             : null,
-        ),
+          )
+          : null,
 
         result
-          ? h('div', { className: 'bilisum-card' },
+          ? h('div', { className: 'bilisum-card bilisum-result' },
             merged.length > 0
               ? h('div', { className: 'bilisum-row' },
                 h('span', { className: 'bilisum-label' },
@@ -1666,8 +1791,26 @@ window.__ModuleLoader__.load({
                 merged.map((row) => h('li', { key: row.key, className: 'bilisum-item' },
                   h('div', { className: 'bilisum-row' },
                     h('span', {
-                      className: `bilisum-mark bilisum-mark-${rowStatus(row) === 'success' ? 'ok' : rowStatus(row) === 'failed' ? 'bad' : 'busy'}`,
-                      title: row.download?.message ?? '',
+                      // Inline: the badge must stay visible even if a later
+                      // stylesheet rule changes spacing or colors.
+                      style: {
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 18,
+                        height: 18,
+                        borderRadius: '50%',
+                        flex: 'none',
+                        color: '#ffffff',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        lineHeight: 1,
+                        background: rowStatus(row) === 'success'
+                          ? '#10b981'
+                          : rowStatus(row) === 'failed' ? '#f59e0b' : 'var(--dsw-alias-brand-primary)',
+                      },
+                      title: row.download?.message
+                        ?? (rowStatus(row) === 'success' ? '成功' : rowStatus(row) === 'failed' ? '失败' : '处理中'),
                     }, rowStatus(row) === 'success' ? '✓' : rowStatus(row) === 'failed' ? '✕' : '⋯'),
                     h('span', null, `${row.title} · ${row.up ?? ''} · ${row.pubdate ?? ''}`),
                     rowStatus(row) === 'failed'
@@ -1691,9 +1834,9 @@ window.__ModuleLoader__.load({
                       : null,
                   ),
                   row.transcriptPath
-                    ? h('div', { className: 'bilisum-row' },
+                    ? h('div', { className: 'bilisum-row bilisum-path-row' },
                       h('span', { className: 'bilisum-muted' }, `${t('subtitleTag')}：`),
-                      h('span', { className: 'bilisum-path', title: row.transcriptPath }, row.transcriptPath),
+                      h('span', { className: 'bilisum-path', title: row.transcriptPath }, shortPath(row.transcriptPath)),
                       h('button', {
                         type: 'button',
                         className: 'bilisum-button bilisum-button-quiet',
@@ -1701,9 +1844,9 @@ window.__ModuleLoader__.load({
                       }, t('openFile')))
                     : null,
                   row.download?.path
-                    ? h('div', { className: 'bilisum-row' },
+                    ? h('div', { className: 'bilisum-row bilisum-path-row' },
                       h('span', { className: 'bilisum-muted' }, `${t('videoTag')}：`),
-                      h('span', { className: 'bilisum-path', title: row.download.path }, row.download.path),
+                      h('span', { className: 'bilisum-path', title: row.download.path }, shortPath(row.download.path)),
                       h('button', {
                         type: 'button',
                         className: 'bilisum-button bilisum-button-quiet',
@@ -1731,12 +1874,64 @@ window.__ModuleLoader__.load({
               : null,
             result.videos.length > 0
               ? h('div', { className: 'bilisum-row' },
-                h('button', {
-                  type: 'button',
-                  className: 'bilisum-button bilisum-button-primary',
-                  disabled: reportBusy,
-                  onClick: () => void generateReport(),
-                }, reportBusy ? t('reportBusy') : t('reportGenerate')),
+                h('div', { className: 'bilisum-split' },
+                  h('button', {
+                    type: 'button',
+                    className: 'bilisum-split-main',
+                    disabled: reportBusy,
+                    onClick: () => void generateReport(),
+                  }, reportBusy ? t('reportBusy') : t('reportGenerate')),
+                  h('button', {
+                    type: 'button',
+                    className: 'bilisum-split-toggle',
+                    'aria-expanded': modelOpen ? 'true' : 'false',
+                    title: t('reportModel'),
+                    onClick: () => {
+                      setModelOpen((open) => !open);
+                      if (!modelOpen) void loadModels();
+                    },
+                  }, h('span', { className: 'bilisum-caret' }, '▾')),
+                  modelOpen
+                    ? h('div', { className: 'bilisum-menu bilisum-menu-models', role: 'menu' },
+                      ...models.builtin.map((item) => {
+                        const key = `${item.provider}/${item.model}`;
+                        const picked = reportTarget?.kind === 'builtin'
+                          && reportTarget.provider === item.provider
+                          && reportTarget.model === item.model;
+                        return h('div', {
+                          key,
+                          className: menuOptionClass(picked),
+                          onClick: () => {
+                            setReportTarget({ kind: 'builtin', provider: item.provider, model: item.model });
+                            setModelOpen(false);
+                          },
+                        },
+                        h('span', null, item.label),
+                        picked ? h('span', { className: 'bilisum-menu-check' }, '✓') : null);
+                      }),
+                      ...models.imported.map((item) => {
+                        const picked = reportTarget?.kind === 'imported' && reportTarget.id === item.id;
+                        return h('div', {
+                          key: item.key,
+                          className: menuOptionClass(picked),
+                          onClick: () => {
+                            setReportTarget({ kind: 'imported', id: item.id });
+                            setModelOpen(false);
+                          },
+                        },
+                        h('span', null, item.label),
+                        picked ? h('span', { className: 'bilisum-menu-check' }, '✓') : null);
+                      }),
+                      h('div', { className: 'bilisum-menu-sep' }),
+                      h('div', {
+                        className: 'bilisum-menu-option',
+                        onClick: () => {
+                          setImportOpen(true);
+                          setModelOpen(false);
+                        },
+                      }, h('span', null, t('importApi'))))
+                    : null,
+                ),
                 reportPath
                   ? h('button', {
                     type: 'button',
@@ -1752,10 +1947,55 @@ window.__ModuleLoader__.load({
               )
               : null,
             reportPath
-              ? h('div', { className: 'bilisum-path', title: reportPath }, reportPath)
+              ? h('div', { className: 'bilisum-path bilisum-path-line', title: reportPath }, shortPath(reportPath))
               : null,
             reportError
               ? h('div', { className: 'bilisum-muted bilisum-log-error' }, reportError)
+              : null,
+            importOpen
+              ? h('div', { className: 'bilisum-card bilisum-import' },
+                h('span', { className: 'bilisum-label' }, t('importApiTitle')),
+                h('div', { className: 'bilisum-row' },
+                  h('input', {
+                    className: 'bilisum-input bilisum-input-grow',
+                    placeholder: t('importName'),
+                    value: importForm.label,
+                    onChange: (event) => setImportForm({ ...importForm, label: event.target.value }),
+                  }),
+                  h('input', {
+                    className: 'bilisum-input bilisum-input-grow',
+                    placeholder: 'https://api.example.com/v1',
+                    value: importForm.baseURL,
+                    spellCheck: false,
+                    onChange: (event) => setImportForm({ ...importForm, baseURL: event.target.value }),
+                  })),
+                h('div', { className: 'bilisum-row' },
+                  h('input', {
+                    className: 'bilisum-input bilisum-input-grow',
+                    placeholder: t('importModel'),
+                    value: importForm.model,
+                    spellCheck: false,
+                    onChange: (event) => setImportForm({ ...importForm, model: event.target.value }),
+                  }),
+                  h('input', {
+                    className: 'bilisum-input bilisum-input-grow',
+                    type: 'password',
+                    placeholder: 'API Key',
+                    value: importForm.apiKey,
+                    onChange: (event) => setImportForm({ ...importForm, apiKey: event.target.value }),
+                  })),
+                h('div', { className: 'bilisum-row' },
+                  h('button', {
+                    type: 'button',
+                    className: 'bilisum-button bilisum-button-primary',
+                    onClick: () => void importModel(),
+                  }, t('save')),
+                  h('button', {
+                    type: 'button',
+                    className: 'bilisum-button',
+                    onClick: () => setImportOpen(false),
+                  }, t('cancel'))),
+                h('span', { className: 'bilisum-muted' }, t('importHint')))
               : null,
           )
           : null,
