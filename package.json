@@ -1,0 +1,51 @@
+{
+  "name": "dsh-bilisum",
+  "version": "1.0.0",
+  "description": "BiliSum: fetch Bilibili subtitles and videos from a chat message or the built-in search list, summarize them, and write a Markdown report.",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib",
+    "client.js",
+    "cordis.patch.yml",
+    "python",
+    "scripts",
+    "vendor",
+    "locale/*.json",
+    "docs",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "prepare": "node scripts/setup-env.js",
+    "prepack": "node scripts/setup-env.js",
+    "check": "node --check lib/index.js && node --check client.js"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "bilibili",
+    "subtitle",
+    "summary"
+  ],
+  "license": "MIT",
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "engines": {
+    "dsh": ">=0.2.0"
+  }
+}

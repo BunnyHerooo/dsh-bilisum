@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "BiliSum",
+    "description": "Fetches Bilibili video metadata and subtitles from pasted links, caches the transcripts, and lets the agent write a Markdown summary report.",
+    "detail": "docs/DETAIL.md"
+  }
+}

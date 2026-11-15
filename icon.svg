@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 36 36" role="img" aria-label="BiliSum">
+  <rect x="3" y="8" width="17" height="20" rx="4.5" fill="#2b7ab3"/>
+  <path d="M9.2 14.1 L16.2 18 L9.2 21.9 Z" fill="#ffffff"/>
+  <rect x="23" y="10.5" width="10" height="3" rx="1.5" fill="#2b7ab3"/>
+  <rect x="23" y="16.5" width="10" height="3" rx="1.5" fill="#6f9db8"/>
+  <rect x="23" y="22.5" width="7" height="3" rx="1.5" fill="#a8bfcd"/>
+</svg>

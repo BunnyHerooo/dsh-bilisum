@@ -1,0 +1,6 @@
+# BiliSum mounts one Host plugin row. The Python environment and the default
+# output live in ~/.dsh/bilisum, so this patch carries no absolute paths.
+- insert:
+    - id: bilisum
+      name: dsh-bilisum
+      config: {}

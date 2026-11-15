@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "BiliSum",
+    "description": "从粘贴的链接里抓取 B站 视频信息与字幕，缓存字幕文本，并由 Agent 生成 Markdown 总结报告。",
+    "detail": "docs/DETAIL.md"
+  }
+}

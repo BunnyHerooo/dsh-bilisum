@@ -1,0 +1,14 @@
+# Runtime state — never committed
+node_modules/
+.venv/
+venv/
+bilibili_summaries/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+
+# OS
+.DS_Store
+Thumbs.db
