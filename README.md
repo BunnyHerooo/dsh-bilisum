@@ -21,14 +21,21 @@ report.
 
 ## Install
 
-From GitHub (recommended):
+**一键安装**：在 DSH 的「添加插件」弹窗中，直接粘贴 GitHub 地址
+`https://github.com/BunnyHerooo/dsh-bilisum` 并点击「安装」即可。
+
+其他方式：
 
 ```bash
-dsh plugin --profile <profile> add github:<owner>/dsh-bilisum
+# 命令行安装
+dsh plugin --profile <profile> add github:BunnyHerooo/dsh-bilisum
+
+# 锁定版本
+dsh plugin --profile <profile> add github:BunnyHerooo/dsh-bilisum#v1.0.0
 ```
 
-From a local checkout: point **Plugins → Add plugin** at this directory, or use
-`plugin_manager` with the absolute package path.
+本地开发版：**Plugins → Add plugin** 指向本地目录，或用 `plugin_manager` 传入
+绝对路径（链接安装，改动实时生效）。
 
 On first activation the plugin checks its Python environment and, if missing,
 builds it in the background:
