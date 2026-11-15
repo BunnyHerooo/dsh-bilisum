@@ -246,20 +246,20 @@ window.__ModuleLoader__.load({
 }
 .bilisum-selector-caret { font-size: 10px; line-height: 1; opacity: .5; }
 .bilisum-menu {
-  position: absolute; top: 100%; left: 0; z-index: 100; min-width: 120px;
+  position: absolute; top: 100%; left: 0; z-index: 100; min-width: 88px;
   margin-top: 4px; padding: 4px; border-radius: 8px;
   background: var(--dsw-alias-bg-overlay);
   border: 0.5px solid var(--dsw-alias-border-l1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .bilisum-menu-option {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 6px 12px; border-radius: 4px; font-size: 13px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 10px; border-radius: 4px; font-size: 13px; white-space: nowrap;
   color: var(--dsw-alias-label-primary); cursor: pointer;
 }
 .bilisum-menu-option:hover { background: var(--dsw-alias-bg-layer-2); }
 .bilisum-menu-option.is-active { font-weight: 600; }
-.bilisum-menu-check { color: var(--dsw-alias-brand-primary); font-size: 12px; }
+.bilisum-menu-check { color: var(--dsw-alias-brand-primary); font-size: 11px; }
 .bilisum-toolbar-input {
   flex: 1 1 auto; min-width: 0; height: 32px; box-sizing: border-box; padding: 0 10px;
   font: inherit; font-size: 13px; border-radius: 8px;
