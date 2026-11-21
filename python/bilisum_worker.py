@@ -9,7 +9,8 @@ Two modes, selected with ``--mode``:
   checkbox list instead of abstract P1/P2 numbers.
 * ``fetch`` — fetch subtitles for the requested pages (or the whole video when
   no page list is given), one page at a time per video with a short pause
-  between requests.
+  between requests. When enabled, the video's top-5 liked comments are fetched
+  once per video and attached to every part's record.
 
 ``bilibili-api-python`` owns WBI signing, cookie handling, and the subtitle
 endpoint. One JSON object per line goes to stdout; the Node half of the plugin
@@ -127,16 +128,15 @@ def classify(exc):
     if code_int == -404:
         return "NOT_FOUND", "视频不存在、已删除或不可访问。"
     if code_int in (62002, 62004):
-        return "NOT_AVAILABLE", "视频不可见（可能已下架、分区受限或需要登录）。"
+        return "NOT_AVAILABLE", "视频不可见或该分P不可访问（可能已下架或分区受限）。"
     if code_int == -101 or "未登录" in text or "not login" in text.lower():
-        return "LOGIN_REQUIRED", "需要登录态（SESSDATA）才能获取该视频的信息或字幕。"
+        return "LOGIN_REQUIRED", "B站明确返回未登录；当前账号登录态已失效，请重新扫码登录。"
     if "尚未安装第三方请求库" in text:
         return "MISSING_HTTP_LIB", "缺少 HTTP 请求库：请在插件使用的 Python 里执行 pip install aiohttp。"
     if "sessdata" in text.lower():
-        return (
-            "LOGIN_REQUIRED",
-            "该视频的字幕需要登录态（SESSDATA）。请在「BiliSum」面板里粘贴 B站 Cookie 后重试。",
-        )
+        # A library exception that mentions a credential parameter is not proof
+        # that B站 rejected the user's login; only -101 / not-login is definitive.
+        return "SUBTITLE_UNAVAILABLE", "该分P未返回可用字幕；B站没有明确判定登录失效，请检查失败原因或稍后重试。"
     if code_int == -400:
         return "BAD_REQUEST", "B站接口拒绝了该请求（参数或签名错误）。"
     if "timed out" in text.lower() or "timeout" in text.lower():
@@ -604,9 +604,10 @@ def format_duration(seconds):
 # --------------------------------------------------------------------------
 class Fetcher:
     def __init__(self, credential, login_ok=None):
-        from bilibili_api import video  # imported here so import errors are fatal, not per-video
+        from bilibili_api import comment, video  # imported here so import errors are fatal, not per-video
 
         self._video_module = video
+        self._comment_module = comment
         self._credential = credential
         self.login_ok = login_ok
 
@@ -673,6 +674,7 @@ class Fetcher:
             "url": f"{meta['url']}?p={selection}" if multi else meta["url"],
             "duration": page.get("duration") or meta["duration"],
             "subtitle": None,
+            "comments": list(meta.get("comments") or []),
         }
 
     async def page_result(self, target, meta, page):
@@ -701,16 +703,22 @@ class Fetcher:
         chosen = pick_subtitle(subtitles)
         if chosen is None:
             if self.login_ok is False:
-                return (
-                    result,
-                    "LOGIN_REQUIRED",
-                    "Cookie 已失效：B站 返回未登录，请重新登录后把新的 SESSDATA 存进 BiliSum。",
-                )
-            if self.login_ok is True:
+                # The login probe is global to the batch and may be stale or
+                # inconsistent with a successful request for another video.
+                # An empty subtitle list for this part is not itself a -101.
                 return (
                     result,
                     "NO_SUBTITLE",
-                    "该视频确实没有 CC / AI 字幕轨道（B站 接口返回空），无法总结。",
+                    "该视频分P没有返回可用字幕轨道。批次开始时登录校验未通过，但此分P接口没有返回未登录错误；若其他视频已成功，请按该分P无字幕或受限处理。",
+                )
+            if self.login_ok is True:
+                # A valid nav session proves the account is logged in, not that
+                # this particular part exposes captions. Preserve the no-track
+                # result without incorrectly blaming the cookie.
+                return (
+                    result,
+                    "NO_SUBTITLE",
+                    "该视频分P没有返回可用的 CC / AI 字幕轨道（可能无字幕、字幕受限或分P接口未提供），账号登录态有效。",
                 )
             hint = "" if os.environ.get("BILISUM_SESSDATA", "").strip() else "（当前未配置 SESSDATA）"
             return (
@@ -738,6 +746,47 @@ class Fetcher:
             "chars": len(text),
         }
         return result, None, None
+
+    async def top_comments(self, aid, limit=5):
+        """The most-liked comments of one video.
+
+        The reply thread belongs to the video, not to a single part, so one
+        call serves every selected page. Page 1 of the like-ordered reply list
+        needs no login; the UP-pinned reply competes by like count as well.
+        """
+        from bilibili_api.comment import CommentResourceType, OrderType
+
+        async def request():
+            return await self._comment_module.get_comments(
+                int(aid),
+                CommentResourceType.VIDEO,
+                order=OrderType.LIKE,
+                credential=self._credential,
+            )
+
+        raw = await self._with_retry(request)
+        data = raw if isinstance(raw, dict) else {}
+        pooled = list(data.get("top_replies") or []) + list(data.get("replies") or [])
+        pinned = ((data.get("top") or {}).get("upper") or {}).get("reply")
+        if isinstance(pinned, dict):
+            pooled.append(pinned)
+        unique = {}
+        for item in pooled:
+            rpid = item.get("rpid")
+            if rpid is not None and rpid not in unique:
+                unique[rpid] = item
+        ranked = sorted(unique.values(), key=lambda item: int(item.get("like") or 0), reverse=True)
+        comments = []
+        for item in ranked[:limit]:
+            content = (item.get("content") or {}).get("message") or ""
+            comments.append({
+                "user": str((item.get("member") or {}).get("uname") or "未知"),
+                "like": int(item.get("like") or 0),
+                "replies": int(item.get("count") or 0),
+                # One line per comment so it renders inside a single list item.
+                "text": " ".join(str(content).split()),
+            })
+        return comments
 
     async def _with_retry(self, fn, *args):
         """Run one library call with a small exponential backoff."""
@@ -869,7 +918,7 @@ async def run_probe(payload):
 
 
 async def run_fetch(payload):
-    """Subtitles for the requested pages, one page at a time per video."""
+    """Subtitles (and hot comments) for the requested pages, one page at a time per video."""
     credential, login_ok, videos, unresolved_shorts = await prepare(payload)
     if not videos:
         emit({
@@ -892,14 +941,15 @@ async def run_fetch(payload):
     quality = str(download_cfg.get("quality") or DOWNLOAD_QUALITY_DEFAULT).strip()
     if quality not in DOWNLOAD_QUALITY_FORMATS:
         quality = DOWNLOAD_QUALITY_DEFAULT
-    # Subtitles and downloads are independent tasks: either may be off.
+    # Subtitles, hot comments and downloads are independent tasks: any may be off.
     subtitles_enabled = payload.get("subtitles", True) is not False
-    if not subtitles_enabled and not download_dir:
-        log("warning", "既没有勾选字幕提取，也没有开启下载，本次不做任何事。")
+    comments_enabled = payload.get("comments", True) is not False
+    if not subtitles_enabled and not comments_enabled and not download_dir:
+        log("warning", "字幕提取、高赞评论、视频下载都没有勾选，本次不做任何事。")
         emit({"type": "summary", "data": {"total": 0, "ok": 0, "failed": 0}})
         return
-    if not subtitles_enabled:
-        log("info", "已关闭字幕提取，本次只下载视频。")
+    if not subtitles_enabled and not comments_enabled:
+        log("info", "已关闭字幕与评论抓取，本次只下载视频。")
     # Collected while subtitles run, executed afterwards: downloads must not
     # delay the text work, and two B站 request streams invite 412.
     download_targets = []
@@ -929,6 +979,18 @@ async def run_fetch(payload):
                 counters["failed"] += 1
                 return
 
+            # The reply thread is video-wide: fetch it once and share it with
+            # every selected part. A comment hiccup never fails an item.
+            meta["comments"] = []
+            if comments_enabled:
+                try:
+                    meta["comments"] = await fetcher.top_comments(meta["aid"])
+                    if meta["comments"]:
+                        log("success", f"已获取【{meta['title']}】的 {len(meta['comments'])} 条高赞评论。")
+                except Exception as exc:  # noqa: BLE001
+                    code, message = classify(exc)
+                    log("warning", f"【{meta['title']}】高赞评论获取失败（不影响字幕）：{message}")
+
             for index, number in enumerate(selected):
                 page = available[number]
                 if download_dir:
@@ -943,7 +1005,13 @@ async def run_fetch(payload):
                         "duration": planned["duration"],
                         "pubdateTs": planned["pubdateTs"],
                     })
+                if not subtitles_enabled and not comments_enabled:
+                    continue
                 if not subtitles_enabled:
+                    # Comments-only run: emit the record without a subtitle call.
+                    result = fetcher.describe_page(meta, page)
+                    emit({"type": "video", "data": result})
+                    counters["ok"] += 1
                     continue
                 if index > 0 and PAGE_SLEEP_SECONDS > 0:
                     await asyncio.sleep(PAGE_SLEEP_SECONDS)

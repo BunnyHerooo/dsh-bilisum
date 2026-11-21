@@ -40,7 +40,7 @@ window.__ModuleLoader__.load({
 .bilisum-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 .bilisum-content {
   display: flex; flex-direction: column; gap: 14px; min-width: 0;
-  max-width: min(1080px, 100%); margin: 0 auto;
+  width: 100%; box-sizing: border-box; margin: 0 auto;
   padding: clamp(12px, 2.2vw, 26px) clamp(12px, 2.4vw, 28px) 48px;
 }
 
@@ -58,6 +58,19 @@ window.__ModuleLoader__.load({
 .bilisum-path-row { flex-wrap: nowrap; }
 .bilisum-path-row > .bilisum-muted { flex: none; }
 .bilisum-path-row .bilisum-button { flex: none; }
+.bilisum-picked { margin-top: 2px; }
+.bilisum-picked-list {
+  display: flex; flex-direction: column; gap: 4px; margin: 0; padding: 0;
+  list-style: none; max-height: 240px; overflow-y: auto;
+}
+.bilisum-picked-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 6px 8px; border-radius: 6px; background: var(--dsw-alias-bg-layer-2);
+}
+.bilisum-picked-title {
+  font-size: 12px; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .bilisum-card-log { padding: 0; gap: 0; }
 .bilisum-log-head {
   display: flex; align-items: center; justify-content: flex-start; gap: 16px;
@@ -110,7 +123,28 @@ window.__ModuleLoader__.load({
 .bilisum-progress-fill-warn { background: var(--dsw-alias-state-warn-primary); }
 .bilisum-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .bilisum-row-nowrap { flex-wrap: nowrap; min-width: 0; }
-.bilisum-row-end { margin-left: auto; flex: 1 1 auto; justify-content: flex-end; }
+/* Wrap by panel width, not viewport width; both rows share a text inset. */
+.bilisum-statusbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+  min-width: 0; padding-inline: 10px; box-sizing: border-box;
+}
+.bilisum-status-items { flex: 0 1 auto; max-width: 100%; gap: 10px 16px; }
+/* Any text action can lead a wrapped row: align its text, not its padded box. */
+.bilisum-statusbar .bilisum-button-quiet,
+.bilisum-statusbar .bilisum-link {
+  padding: 6px 0; border-width: 0; min-height: 32px;
+  box-sizing: border-box; line-height: 20px; text-align: start;
+}
+.bilisum-status-items > .bilisum-button { white-space: nowrap; flex-shrink: 0; }
+.bilisum-status-user { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Share the parent's wrap grid, so nested rows cannot acquire an extra inset. */
+.bilisum-status-python { display: contents; }
+.bilisum-status-output { flex: 1 1 460px; min-width: 0; gap: 10px 16px; }
+.bilisum-status-path { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 0; min-height: 32px; }
+.bilisum-status-path > .bilisum-label { flex: none; white-space: nowrap; }
+.bilisum-status-output-actions { display: contents; }
+.bilisum-status-output-actions > button { flex: none; white-space: nowrap; }
+.bilisum-status-error { flex-basis: 100%; min-width: 0; }
 .bilisum-link {
   border: none; background: transparent; padding: 0; font: inherit; font-size: 12px;
   color: var(--dsw-alias-label-secondary); cursor: pointer;
@@ -214,7 +248,7 @@ window.__ModuleLoader__.load({
   color: var(--dsw-alias-label-secondary); flex: 1 1 auto; min-width: 0;
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
-.bilisum-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.bilisum-check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .bilisum-options { display: flex; flex-direction: column; gap: 6px; }
 .bilisum-check input { margin: 0; accent-color: var(--dsw-alias-brand-primary); }
 .bilisum-check[aria-disabled='true'] { opacity: .55; cursor: default; }
@@ -238,7 +272,7 @@ window.__ModuleLoader__.load({
 
 /* Minimal tab switch: bare labels, one white capsule on the active item */
 .bilisum-tabs {
-  display: inline-flex; align-self: flex-start; gap: 4px;
+  display: inline-flex; align-self: flex-start; flex-wrap: wrap; gap: 4px;
   background: transparent; border: none; padding: 0;
   margin: 0 0 -6px;
 }
@@ -257,8 +291,10 @@ window.__ModuleLoader__.load({
 
 /* Shared action bar: primary button + task options on one line */
 .bilisum-actions {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap; min-height: 36px;
+  display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; min-height: 36px;
 }
+/* Download checkbox + quality select travel together when the bar wraps */
+.bilisum-task-group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap; }
 .bilisum-actions-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 .bilisum-actions-hint { font-size: 11px; color: var(--dsw-alias-label-secondary); margin-top: -2px; }
 .bilisum-select-compact { height: 32px; padding: 0 8px; }
@@ -347,6 +383,12 @@ window.__ModuleLoader__.load({
   .bilisum-toolbar-input { flex: 1 1 140px; }
   .bilisum-toolbar-search { height: 30px; padding: 0 12px; }
 }
+
+.bilisum-qr { width: 220px; height: 220px; flex: none; border-radius: 10px; border: 0.5px solid var(--dsw-alias-border-l1); background: #ffffff; }
+.bilisum-qr-row { align-items: flex-start; flex-wrap: nowrap; }
+.bilisum-qr-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1 1 auto; }
+.bilisum-qr-status { font-size: 13px; font-weight: 600; color: var(--dsw-alias-label-primary); }
+.bilisum-qr-done { font-size: 12px; color: var(--dsw-alias-state-success-primary); }
 `;
 
     /** Sidebar glyph; the shell supplies the size and owns the button chrome. */
@@ -403,7 +445,7 @@ window.__ModuleLoader__.load({
           'Paste links or a whole share message here, for example:\n【标题】 https://b23.tv/xxxxxxx  BV1xx411c7mD',
         start: 'Start',
         subtitlesLabel: 'Extract subtitles (text)',
-        needTask: 'Tick at least one task: subtitles or video download.',
+        needTask: 'Tick at least one task: subtitles (with top comments) or video download.',
         probing: 'Parsing…',
         chooseHint: 'Multi-part video detected — choose the parts to fetch:',
         seriesHint: 'Collection: {title} · {count} parts',
@@ -473,6 +515,17 @@ window.__ModuleLoader__.load({
         videoTag: 'Video',
         tabLinks: 'Video links',
         tabDiscover: 'Search videos',
+        tabAccount: 'My account',
+        accountFavorites: 'Favorites',
+        accountWatchlater: 'Watch later',
+        accountFolder: 'Favorite folder',
+        accountFoldersMore: 'Load more folders',
+        accountFoldersEmpty: 'No favorite folders.',
+        accountFavoritesEmpty: 'No videos in this folder.',
+        accountWatchlaterEmpty: 'Your watch-later list is empty.',
+        accountLoading: 'Loading…',
+        accountPage: 'Loaded through page {page}',
+        accountQueueHint: 'Selections are shared across your folders and watch-later list.',
         progressSubtitles: 'Subtitles',
         progressDownloads: 'Downloads',
         discoverKindPopular: 'Popular',
@@ -482,9 +535,21 @@ window.__ModuleLoader__.load({
         discoverEmpty: 'Nothing loaded yet.',
         discoverMore: 'Load more',
         discoverPicked: '{count} selected',
+        pickedTitle: 'Selected videos',
+        remove: 'Remove',
         discoverStart: 'Start fetching',
         discoverAdd: 'Add',
         discoverAdded: 'Added ✓',
+        qrLogin: 'Scan to sign in',
+        qrAlt: 'Bilibili sign-in QR code',
+        qrHint: 'Scan with the Bilibili app and confirm on your phone.',
+        qrWaiting: 'Waiting for scan…',
+        qrScanned: 'Scanned — confirm on your phone',
+        qrConfirmed: 'Signed in',
+        qrExpired: 'QR code expired — refresh to try again',
+        qrError: 'Sign-in failed',
+        qrRefresh: 'Refresh QR',
+        signedInAs: 'Signed in as {name}',
       },
       'zh-CN': {
         panel: 'BiliSum',
@@ -520,7 +585,7 @@ window.__ModuleLoader__.load({
         linksPlaceholder: '在这里粘贴链接或整段分享文案，例如：\n【标题】 https://b23.tv/xxxxxxx  BV1xx411c7mD',
         start: '开始解析',
         subtitlesLabel: '提取字幕（文本）',
-        needTask: '请至少勾选一项：提取字幕 或 下载原视频。',
+        needTask: '请至少勾选一项：提取字幕（含高赞评论）或 下载原视频。',
         probing: '解析中…',
         chooseHint: '检测到分P/合集视频，请勾选要抓取的分P：',
         seriesHint: '检测到合集：《{title}》，共 {count} 个视频',
@@ -590,6 +655,17 @@ window.__ModuleLoader__.load({
         videoTag: '视频',
         tabLinks: '视频链接',
         tabDiscover: '搜索视频',
+        tabAccount: '我的账号',
+        accountFavorites: '收藏夹',
+        accountWatchlater: '稍后再看',
+        accountFolder: '选择收藏夹',
+        accountFoldersMore: '加载更多收藏夹',
+        accountFoldersEmpty: '暂无收藏夹',
+        accountFavoritesEmpty: '此收藏夹暂无视频',
+        accountWatchlaterEmpty: '稍后再看暂无视频',
+        accountLoading: '加载中…',
+        accountPage: '已加载至第 {page} 页',
+        accountQueueHint: '收藏夹与稍后再看共用账号待抓取队列。',
         progressSubtitles: '字幕',
         progressDownloads: '下载',
         discoverKindPopular: '热门',
@@ -599,9 +675,21 @@ window.__ModuleLoader__.load({
         discoverEmpty: '暂无内容',
         discoverMore: '加载更多',
         discoverPicked: '已选 {count} 个',
+        pickedTitle: '已选视频',
+        remove: '移除',
         discoverStart: '开始抓取',
         discoverAdd: '加入',
         discoverAdded: '已加入 ✓',
+        qrLogin: '扫码登录',
+        qrAlt: 'B站登录二维码',
+        qrHint: '用手机 B站 App 扫码，并在手机上点确认登录',
+        qrWaiting: '等待扫码…',
+        qrScanned: '已扫码，请在手机上确认',
+        qrConfirmed: '登录成功',
+        qrExpired: '二维码已过期，请刷新后重试',
+        qrError: '登录失败',
+        qrRefresh: '刷新二维码',
+        signedInAs: '已登录：{name}',
       },
     };
 
@@ -626,10 +714,14 @@ window.__ModuleLoader__.load({
         throw new Error(`接口返回了非 JSON 内容（HTTP ${response.status}）`);
       }
       if (!response.ok || payload?.ok === false) {
-        throw new Error(payload?.error || `请求失败（HTTP ${response.status}）`);
+        const error = new Error(payload?.error || `请求失败（HTTP ${response.status}）`);
+        error.code = payload?.code;
+        throw error;
       }
       return payload;
     }
+
+    const emptyAccountPage = () => ({ items: [], page: 0, hasMore: false, busy: false, loaded: false, error: '' });
 
     function levelClass(level) {
       const known = ['info', 'processing', 'success', 'warning', 'error'];
@@ -678,6 +770,13 @@ window.__ModuleLoader__.load({
       return `…\\${parts.slice(-2).join('\\')}`;
     }
 
+    /** Parent directory of a file path, for both `\` and `/` separators. */
+    function parentDir(filePath) {
+      const text = String(filePath ?? '').replace(/[\\/]+$/, '');
+      const idx = Math.max(text.lastIndexOf('\\'), text.lastIndexOf('/'));
+      return idx > 0 ? text.slice(0, idx) : text;
+    }
+
     // ------------------------------------------------------------------
     // Console: status, Cookie, links, live log, results.
     // Rendered by the main panel and by the Settings page.
@@ -704,7 +803,7 @@ window.__ModuleLoader__.load({
       const [error, setError] = React.useState('');
       const [copied, setCopied] = React.useState(false);
       const [hintOpen, setHintOpen] = React.useState(false);
-      const [downloadEnabled, setDownloadEnabled] = React.useState(false);
+      const [downloadEnabled, setDownloadEnabled] = React.useState(true);
       const [quality, setQuality] = React.useState('1080p');
       const [extractSubtitles, setExtractSubtitles] = React.useState(true);
       const [retryingKeys, setRetryingKeys] = React.useState([]);
@@ -720,8 +819,27 @@ window.__ModuleLoader__.load({
       const [discoverError, setDiscoverError] = React.useState('');
       const [discoverPicked, setDiscoverPicked] = React.useState([]);
       const [discoverLoaded, setDiscoverLoaded] = React.useState(false);
+      const [accountKind, setAccountKind] = React.useState('favorites');
+      const [accountFolders, setAccountFolders] = React.useState(emptyAccountPage);
+      const [accountFolderId, setAccountFolderId] = React.useState('');
+      const [accountVideos, setAccountVideos] = React.useState(emptyAccountPage);
+      const [accountPicked, setAccountPicked] = React.useState([]);
+      // Shared disclosure for the "picked" summary in the search and account views.
+      const [pickedOpen, setPickedOpen] = React.useState(false);
+      const [accountOwner, setAccountOwner] = React.useState('');
+      const [accountPaused, setAccountPaused] = React.useState(false);
+      const accountIdentity = status?.cookieValid === true ? JSON.stringify([status.cookieMid ?? '', status.cookieUname ?? '']) : '';
+      const accountIdentityRef = React.useRef(accountIdentity);
+      accountIdentityRef.current = accountIdentity;
+      const accountGeneration = React.useRef(0);
+      const accountRequests = React.useRef({ folders: null, videos: null });
       const [kindOpen, setKindOpen] = React.useState(false);
       const [cookieOpen, setCookieOpen] = React.useState(false);
+      const [qrOpen, setQrOpen] = React.useState(false);
+      const [qrImage, setQrImage] = React.useState('');
+      const [qrKey, setQrKey] = React.useState('');
+      const [qrStatus, setQrStatus] = React.useState('idle');
+      const [qrMessage, setQrMessage] = React.useState('');
       const [models, setModels] = React.useState({ builtin: [], imported: [], default: null });
       const [reportTarget, setReportTarget] = React.useState(null);
       const [modelOpen, setModelOpen] = React.useState(false);
@@ -738,7 +856,31 @@ window.__ModuleLoader__.load({
       const progressTimer = React.useRef(null);
       const kindRef = React.useRef(null);
       const queryRef = React.useRef(null);
-      const cookieInitRef = React.useRef(false);
+      const qrTimerRef = React.useRef(null);
+      const qrCancelledRef = React.useRef(false);
+      const abortAccountRequests = React.useCallback(() => {
+        accountGeneration.current += 1;
+        for (const request of Object.values(accountRequests.current)) request?.abort();
+        accountRequests.current = { folders: null, videos: null };
+      }, []);
+
+      const resetAccount = React.useCallback((identity = accountIdentityRef.current) => {
+        abortAccountRequests();
+        setAccountOwner(identity);
+        setAccountKind('favorites');
+        setAccountFolders(emptyAccountPage());
+        setAccountFolderId('');
+        setAccountVideos(emptyAccountPage());
+        setAccountPicked([]);
+      }, [abortAccountRequests]);
+
+      React.useEffect(() => {
+        resetAccount(accountIdentity);
+        if (!accountIdentity) setViewMode((mode) => mode === 'account' ? 'links' : mode);
+      }, [accountIdentity, resetAccount]);
+
+      React.useEffect(() => () => abortAccountRequests(), [abortAccountRequests]);
+
       const loadStatus = React.useCallback(() => {
         let cancelled = false;
         setStatusError('');
@@ -746,12 +888,6 @@ window.__ModuleLoader__.load({
           .then((payload) => {
             if (cancelled) return;
             setStatus(payload);
-            // A fresh install has no cookie yet: open the field once so the
-            // user sees where it goes, then let them collapse it.
-            if (!cookieInitRef.current) {
-              cookieInitRef.current = true;
-              if (!payload?.cookieConfigured) setCookieOpen(true);
-            }
           })
           .catch((err) => {
             if (!cancelled) setStatusError(err.message);
@@ -800,6 +936,9 @@ window.__ModuleLoader__.load({
        * log, results and any pending selection so the panel starts clean.
        */
       const refreshPlugin = async () => {
+        // Invalidate private requests immediately, before waiting for the Host.
+        setAccountPaused(true);
+        resetAccount();
         try {
           await callJson('/bilisum/reset', { method: 'POST', body: '{}' });
         } catch {
@@ -836,7 +975,17 @@ window.__ModuleLoader__.load({
         setReportError('');
         offsetRef.current = 0;
         setLogOpen(false);
-        loadStatus();
+        cancelQrLogin();
+        setStatusError('');
+        try {
+          setStatus(await callJson('/bilisum/status'));
+        } catch (err) {
+          setStatusError(err.message);
+          setStatus(null);
+          setViewMode((mode) => mode === 'account' ? 'links' : mode);
+        } finally {
+          setAccountPaused(false);
+        }
       };
 
       /** Open the OS directory picker through the Client workspace service. */
@@ -877,11 +1026,20 @@ window.__ModuleLoader__.load({
       const loadModels = React.useCallback(async () => {
         try {
           const payload = await callJson('/bilisum/models');
-          setModels({
-            builtin: Array.isArray(payload.builtin) ? payload.builtin : [],
-            imported: Array.isArray(payload.imported) ? payload.imported : [],
-            default: payload.default ?? null,
-          });
+          const builtin = Array.isArray(payload.builtin) ? payload.builtin : [];
+          const imported = Array.isArray(payload.imported) ? payload.imported : [];
+          setModels({ builtin, imported, default: payload.default ?? null });
+          // Pre-select the effective default so the checkmark matches the model
+          // the server actually uses when no explicit choice has been made yet.
+          if (builtin.length > 0) {
+            setReportTarget((previous) => previous ?? {
+              kind: 'builtin',
+              provider: builtin[0].provider,
+              model: builtin[0].model,
+            });
+          } else if (imported.length > 0) {
+            setReportTarget((previous) => previous ?? { kind: 'imported', id: imported[0].id });
+          }
         } catch {
           // keep the previous list when the route is unavailable
         }
@@ -1008,6 +1166,129 @@ window.__ModuleLoader__.load({
         void parse(discoverPicked.join(' '));
       };
 
+      /** `[已选 N 个 ▾]` — opens the selected-video panel. */
+      const pickedButton = (picked) => (picked.length > 0
+        ? h('button', {
+          type: 'button',
+          className: 'bilisum-button bilisum-button-quiet',
+          'aria-expanded': pickedOpen ? 'true' : 'false',
+          onClick: () => setPickedOpen((open) => !open),
+        }, `${t('discoverPicked').replace('{count}', String(picked.length))} ${pickedOpen ? '▴' : '▾'}`)
+        : null);
+
+      /** Expanded list of the picked videos, each removable. */
+      const pickedPanel = ({ items, picked, clear, remove }) => (pickedOpen && picked.length > 0
+        ? h('div', { className: 'bilisum-card bilisum-picked' },
+          h('div', { className: 'bilisum-row' },
+            h('span', { className: 'bilisum-label' }, t('pickedTitle')),
+            h('button', {
+              type: 'button',
+              className: 'bilisum-link',
+              onClick: () => {
+                clear();
+                setPickedOpen(false);
+              },
+            }, t('clear'))),
+          h('ul', { className: 'bilisum-picked-list' },
+            picked.map((bvid) => {
+              const hit = items.find((item) => item?.bvid === bvid);
+              const title = hit?.title || bvid;
+              return h('li', { key: bvid, className: 'bilisum-picked-item' },
+                h('span', { className: 'bilisum-picked-title', title }, title),
+                h('button', {
+                  type: 'button',
+                  className: 'bilisum-link',
+                  title: t('remove'),
+                  onClick: () => remove(bvid),
+                }, '×'));
+            })))
+        : null);
+
+      // Private lists are fetched only while the user is viewing the account tab.
+      const loadAccount = async (target, { reset = false } = {}) => {
+        if (viewMode !== 'account' || !accountIdentity || accountOwner !== accountIdentity || accountPaused) return;
+        if (target === 'videos' && accountKind === 'favorites' && !accountFolderId) return;
+        if (accountRequests.current[target]) return;
+        const previousPage = target === 'folders' ? accountFolders : accountVideos;
+        const nextPage = reset ? 1 : previousPage.page + 1;
+        const update = target === 'folders' ? setAccountFolders : setAccountVideos;
+        const controller = new AbortController();
+        const generation = accountGeneration.current;
+        const identity = accountIdentity;
+        accountRequests.current[target] = controller;
+        const isCurrent = () => !controller.signal.aborted
+          && generation === accountGeneration.current
+          && identity === accountIdentityRef.current
+          && accountRequests.current[target] === controller;
+        const params = new URLSearchParams({
+          action: target === 'folders' ? 'folders' : accountKind,
+          page: String(nextPage),
+        });
+        if (target === 'videos' && accountKind === 'favorites') params.set('folderId', accountFolderId);
+        update((previous) => ({ ...previous, busy: true, error: '' }));
+        try {
+          const payload = await callJson(`/bilisum/account?${params}`, { signal: controller.signal });
+          if (!isCurrent()) return;
+          const items = target === 'folders' ? payload.folders : payload.items;
+          const key = target === 'folders' ? 'id' : 'bvid';
+          update((previous) => ({
+            items: [...new Map([...(reset ? [] : previous.items), ...(Array.isArray(items) ? items : [])]
+              .filter((item) => item?.[key]).map((item) => [String(item[key]), item])).values()],
+            page: Number(payload.page) || nextPage,
+            hasMore: payload.hasMore === true,
+            busy: false,
+            loaded: true,
+            error: '',
+          }));
+          if (target === 'folders') setAccountFolderId((id) => id || String(items?.[0]?.id ?? ''));
+        } catch (err) {
+          if (!isCurrent()) return;
+          if (err.code === 'LOGIN_REQUIRED') {
+            resetAccount('');
+            setStatus((previous) => ({ ...previous, cookieValid: false, cookieUname: '', cookieMid: '' }));
+            setStatusError(err.message);
+            setViewMode('links');
+          } else {
+            update((previous) => ({ ...previous, busy: false, loaded: true, error: err.message }));
+          }
+        } finally {
+          if (accountRequests.current[target] === controller) accountRequests.current[target] = null;
+        }
+      };
+
+      React.useEffect(() => {
+        if (viewMode !== 'account' || !accountIdentity || accountOwner !== accountIdentity || accountPaused) return;
+        if (accountKind === 'favorites' && !accountFolders.loaded && !accountFolders.busy) {
+          void loadAccount('folders', { reset: true });
+        }
+        if ((accountKind === 'watchlater' || accountFolderId) && !accountVideos.loaded && !accountVideos.busy) {
+          void loadAccount('videos', { reset: true });
+        }
+        // Requests are generation-guarded; only navigation and list readiness trigger loading.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [viewMode, accountIdentity, accountOwner, accountPaused, accountKind, accountFolderId,
+        accountFolders.loaded, accountFolders.busy, accountVideos.loaded, accountVideos.busy]);
+
+      const changeAccountList = (kind, folderId = accountFolderId) => {
+        // Preserve the independent account queue while replacing just the visible list.
+        accountRequests.current.videos?.abort();
+        accountRequests.current.videos = null;
+        setAccountKind(kind);
+        setAccountFolderId(folderId);
+        setAccountVideos(emptyAccountPage());
+      };
+
+      const toggleAccountPicked = (bvid) => {
+        if (!accountIdentity || accountOwner !== accountIdentity || accountPaused) return;
+        setAccountPicked((previous) => previous.includes(bvid)
+          ? previous.filter((item) => item !== bvid) : [...previous, bvid]);
+      };
+
+      const startFromAccount = () => {
+        if (!accountIdentity || accountOwner !== accountIdentity || accountPaused || running || probing || !accountPicked.length) return;
+        void parse(accountPicked.join(' '));
+      };
+
       /** Compact progress readout that lives inside the log header. */
       const progressInfo = progress
         ? (() => {
@@ -1026,7 +1307,7 @@ window.__ModuleLoader__.load({
 
       /**
        * Shared action bar: the primary button plus the task checkboxes and the
-       * quality selector. Both tabs render it, so the options always exist and
+       * quality selector. All tabs render it, so the options always exist and
        * always come from the same state.
        */
       const actionRow = ({ primary, onPrimary, busy, right }) => h(React.Fragment, null,
@@ -1044,28 +1325,30 @@ window.__ModuleLoader__.load({
               onChange: (event) => setExtractSubtitles(event.target.checked),
             }),
             h('span', null, t('subtitlesLabel'))),
-          h('label', {
-            className: 'bilisum-check',
-            'aria-disabled': downloadReady ? 'false' : 'true',
-            title: downloadReady ? '' : downloadReason,
-          },
-          h('input', {
-            type: 'checkbox',
-            checked: downloadEnabled && downloadReady,
-            disabled: !downloadReady,
-            onChange: (event) => setDownloadEnabled(event.target.checked),
-          }),
-          h('span', null, t('downloadLabel'))),
-          h('select', {
-            className: 'bilisum-select bilisum-select-compact',
-            value: quality,
-            disabled: !downloadReady || !downloadEnabled,
-            onChange: (event) => setQuality(event.target.value),
-            title: t('qualityLabel'),
-          }, ['4k', '1080p', '720p', '480p', 'audio'].map((value) => h('option', {
-            key: value,
-            value,
-          }, qualityText(t, value)))),
+          h('div', { className: 'bilisum-task-group' },
+            h('label', {
+              className: 'bilisum-check',
+              'aria-disabled': downloadReady ? 'false' : 'true',
+              title: downloadReady ? '' : downloadReason,
+            },
+            h('input', {
+              type: 'checkbox',
+              checked: downloadEnabled && downloadReady,
+              disabled: !downloadReady,
+              onChange: (event) => setDownloadEnabled(event.target.checked),
+            }),
+            h('span', null, t('downloadLabel'))),
+            h('select', {
+              className: 'bilisum-select bilisum-select-compact',
+              value: quality,
+              disabled: !downloadReady || !downloadEnabled,
+              onChange: (event) => setQuality(event.target.value),
+              title: t('qualityLabel'),
+            }, ['4k', '1080p', '720p', '480p', 'audio'].map((value) => h('option', {
+              key: value,
+              value,
+            }, qualityText(t, value)))),
+          ),
           right ? h('div', { className: 'bilisum-actions-right' }, right) : null,
         ),
         downloadEnabled && downloadReady
@@ -1125,6 +1408,8 @@ window.__ModuleLoader__.load({
       }, [logs, logOpen]);
 
       const saveCookie = async () => {
+        resetAccount('');
+        setStatus((previous) => ({ ...previous, cookieValid: null, cookieUname: '', cookieMid: '' }));
         try {
           setError('');
           const payload = await callJson('/bilisum/cookie', {
@@ -1135,14 +1420,18 @@ window.__ModuleLoader__.load({
           setStatus((previous) => ({
             ...(previous ?? {}),
             cookieConfigured: payload.cookieConfigured,
-            cookieValid: payload.cookieValid,
+            cookieValid: null,
           }));
+          // Cookie POST does not return identity; the status route is authoritative.
+          loadStatus();
         } catch (err) {
           setError(err.message);
         }
       };
 
       const clearCookie = async () => {
+        resetAccount('');
+        setStatus((previous) => ({ ...previous, cookieValid: false, cookieUname: '', cookieMid: '' }));
         try {
           setCookie('');
           await callJson('/bilisum/cookie', { method: 'POST', body: JSON.stringify({ sessdata: '' }) });
@@ -1152,6 +1441,96 @@ window.__ModuleLoader__.load({
           setError(err.message);
         }
       };
+
+      const stopQrPolling = () => {
+        if (qrTimerRef.current) {
+          window.clearInterval(qrTimerRef.current);
+          qrTimerRef.current = null;
+        }
+      };
+
+      const beginQrPolling = (key) => {
+        stopQrPolling();
+        const tick = async () => {
+          if (qrCancelledRef.current) return;
+          try {
+            const payload = await callJson('/bilisum/qrcode', {
+              method: 'POST',
+              body: JSON.stringify({ action: 'poll', qrKey: key }),
+            });
+            if (payload.status === 'confirmed') {
+              stopQrPolling();
+              setQrStatus('confirmed');
+              setQrMessage('');
+              setStatus((previous) => ({
+                ...(previous ?? {}),
+                cookieConfigured: true,
+                cookieValid: payload.valid === true,
+                cookieUname: payload.uname ?? '',
+              }));
+              setQrOpen(false);
+              return;
+            }
+            if (payload.status === 'expired') {
+              stopQrPolling();
+              setQrStatus('expired');
+              setQrMessage(t('qrExpired'));
+              return;
+            }
+            if (payload.status === 'error') {
+              stopQrPolling();
+              setQrStatus('error');
+              setQrMessage(payload.message || t('qrError'));
+              return;
+            }
+            setQrStatus(payload.status === 'scanned' ? 'scanned' : 'waiting');
+            setQrMessage('');
+          } catch (err) {
+            stopQrPolling();
+            setQrStatus('error');
+            setQrMessage(err.message);
+          }
+        };
+        qrTimerRef.current = window.setInterval(tick, 1500);
+        void tick();
+      };
+
+      const startQrLogin = async () => {
+        try {
+          setError('');
+          qrCancelledRef.current = false;
+          setQrStatus('waiting');
+          setQrMessage('');
+          setQrImage('');
+          setQrOpen(true);
+          const payload = await callJson('/bilisum/qrcode', {
+            method: 'POST',
+            body: JSON.stringify({ action: 'generate' }),
+          });
+          if (qrCancelledRef.current) return;
+          setQrKey(payload.qrKey);
+          setQrImage(payload.svg);
+          beginQrPolling(payload.qrKey);
+        } catch (err) {
+          setQrStatus('error');
+          setQrMessage(err.message);
+        }
+      };
+
+      const cancelQrLogin = () => {
+        qrCancelledRef.current = true;
+        stopQrPolling();
+        setQrOpen(false);
+        setQrImage('');
+        setQrKey('');
+        setQrStatus('idle');
+        setQrMessage('');
+      };
+
+      React.useEffect(() => () => {
+        qrCancelledRef.current = true;
+        stopQrPolling();
+      }, []);
 
       const beginFetch = async (items) => {
         setError('');
@@ -1387,70 +1766,108 @@ window.__ModuleLoader__.load({
           : cookieBad
             ? { className: 'bilisum-badge bilisum-badge-error', text: t('cookieInvalid') }
             : { className: 'bilisum-badge', text: t('cookieUnverified') };
+      const qrStatusText = () => {
+        if (qrStatus === 'scanned') return t('qrScanned');
+        if (qrStatus === 'confirmed') return t('qrConfirmed');
+        if (qrStatus === 'expired') return t('qrExpired');
+        if (qrStatus === 'error') return t('qrError');
+        return t('qrWaiting');
+      };
       const pythonOk = Boolean(status?.python?.ok);
       const downloadReady = Boolean(status?.download?.ready);
       const downloadReason = status?.download?.reason || '';
 
+      const videoList = (items, picked, toggle) => items.map((item) => h('div', {
+        key: item.bvid,
+        className: 'bilisum-discover-row',
+      },
+      item.cover
+        ? h('img', { className: 'bilisum-cover', src: item.cover, alt: '', loading: 'lazy' })
+        : h('span', { className: 'bilisum-cover' }),
+      h('div', { className: 'bilisum-discover-main' },
+        h('div', { className: 'bilisum-discover-title', title: item.title }, item.title),
+        h('div', { className: 'bilisum-discover-meta' },
+          `${item.up ?? ''}${item.duration ? ` · ${formatDuration(item.duration)}` : ''}`)),
+      h('button', {
+        type: 'button',
+        className: `bilisum-button${picked.includes(item.bvid) ? ' bilisum-button-quiet' : ''}`,
+        'aria-pressed': picked.includes(item.bvid),
+        onClick: () => toggle(item.bvid),
+      }, picked.includes(item.bvid) ? t('discoverAdded') : t('discoverAdd'))));
+
       return h('div', { className: 'bilisum-page' },
         showIntro ? h('p', { className: 'bilisum-desc' }, t('description')) : null,
 
-        h('div', { className: 'bilisum-row' },
-          h('button', {
-            type: 'button',
-            className: 'bilisum-button bilisum-button-quiet',
-            title: t('refreshPluginHint'),
-            onClick: refreshPlugin,
-          }, t('refreshPlugin')),
-          h('button', {
-            type: 'button',
-            className: 'bilisum-button bilisum-button-quiet',
-            'aria-expanded': cookieOpen ? 'true' : 'false',
-            onClick: () => setCookieOpen((open) => !open),
-          }, t('cookieLabel')),
-          h('span', { className: cookieBadge.className }, cookieBadge.text),
-          h('button', {
-            type: 'button',
-            className: 'bilisum-hint',
-            title: t('cookieHelpShort'),
-            'aria-label': t('cookieHelpShort'),
-            'aria-expanded': hintOpen ? 'true' : 'false',
-            onClick: () => setHintOpen((open) => !open),
-          }, '!'),
-          h('span', { className: 'bilisum-label' }, t('pythonLabel')),
-          h('span', {
-            className: `bilisum-badge ${pythonOk ? 'bilisum-badge-ok' : 'bilisum-badge-error'}`,
-          }, pythonOk ? t('pythonOk') : t('pythonMissing')),
-          h('span', {
-            className: `bilisum-badge ${downloadReady ? 'bilisum-badge-ok' : 'bilisum-badge-error'}`,
-            title: downloadReason || t('downloadLabel'),
-          }, downloadReady ? t('downloadReady') : t('downloadUnavailable')),
+        h('div', { className: 'bilisum-statusbar' },
+          h('div', { className: 'bilisum-row bilisum-status-items' },
+            h('button', {
+              type: 'button',
+              className: 'bilisum-button bilisum-button-quiet bilisum-refresh',
+              title: t('refreshPluginHint'),
+              onClick: refreshPlugin,
+            }, t('refreshPlugin')),
+            h('button', {
+              type: 'button',
+              className: 'bilisum-button bilisum-button-quiet',
+              'aria-expanded': cookieOpen ? 'true' : 'false',
+              onClick: () => setCookieOpen((open) => !open),
+            }, t('cookieLabel')),
+            h('span', { className: cookieBadge.className }, cookieBadge.text),
+            status?.cookieUname
+              ? h('span', { className: 'bilisum-badge bilisum-badge-ok bilisum-status-user', title: status.cookieUname }, t('signedInAs').replace('{name}', status.cookieUname))
+              : null,
+            h('button', {
+              type: 'button',
+              className: 'bilisum-button bilisum-button-quiet',
+              onClick: () => (qrOpen ? cancelQrLogin() : void startQrLogin()),
+            }, qrOpen ? t('cancel') : t('qrLogin')),
+            h('button', {
+              type: 'button',
+              className: 'bilisum-hint',
+              title: t('cookieHelpShort'),
+              'aria-label': t('cookieHelpShort'),
+              'aria-expanded': hintOpen ? 'true' : 'false',
+              onClick: () => setHintOpen((open) => !open),
+            }, '!'),
+            h('div', { className: 'bilisum-status-python' },
+              h('span', { className: 'bilisum-label' }, t('pythonLabel')),
+              h('span', {
+                className: `bilisum-badge ${pythonOk ? 'bilisum-badge-ok' : 'bilisum-badge-error'}`,
+              }, pythonOk ? t('pythonOk') : t('pythonMissing')),
+              h('span', {
+                className: `bilisum-badge ${downloadReady ? 'bilisum-badge-ok' : 'bilisum-badge-error'}`,
+                title: downloadReason || t('downloadLabel'),
+              }, downloadReady ? t('downloadReady') : t('downloadUnavailable'))),
+          ),
           status?.outputDir
-            ? h('div', { className: 'bilisum-row bilisum-row-end' },
-              h('span', { className: 'bilisum-label' }, t('outputLabel')),
-              h('span', { className: 'bilisum-path', title: status.outputDir }, status.outputDir),
-              h('button', {
-                type: 'button',
-                className: 'bilisum-link',
-                onClick: () => {
-                  setOutputDraft(status.outputDir);
-                  setOutputHint('');
-                  setOutputEditing(true);
-                },
-              }, t('outputChange')),
-              status.isCustomOutput
-                ? h('button', {
+            ? h('div', { className: 'bilisum-row bilisum-status-output' },
+              h('div', { className: 'bilisum-status-path' },
+                h('span', { className: 'bilisum-label' }, t('outputLabel')),
+                h('span', { className: 'bilisum-path', title: status.outputDir }, status.outputDir)),
+              h('div', { className: 'bilisum-status-output-actions' },
+                h('button', {
                   type: 'button',
                   className: 'bilisum-link',
-                  onClick: () => void saveOutput(''),
-                }, t('outputReset'))
-                : null,
-              h('button', {
-                type: 'button',
-                className: 'bilisum-button bilisum-button-quiet',
-                onClick: () => reveal(status.outputDir),
-              }, t('openFolder')))
+                  onClick: () => {
+                    setOutputDraft(status.outputDir);
+                    setOutputHint('');
+                    setOutputEditing(true);
+                  },
+                }, t('outputChange')),
+                status.isCustomOutput
+                  ? h('button', {
+                    type: 'button',
+                    className: 'bilisum-link',
+                    onClick: () => void saveOutput(''),
+                  }, t('outputReset'))
+                  : null,
+                h('button', {
+                  type: 'button',
+                  className: 'bilisum-button bilisum-button-quiet',
+                  onClick: () => reveal(status.outputDir),
+                }, t('openFolder'))))
             : null,
-          statusError ? h('span', { className: 'bilisum-code bilisum-log-error' }, statusError) : null,
+          statusError ? h('span', { className: 'bilisum-code bilisum-log-error bilisum-status-error' }, statusError) : null,
         ),
 
         outputEditing
@@ -1534,6 +1951,35 @@ window.__ModuleLoader__.load({
           )
           : null,
 
+        qrOpen
+          ? h('div', { className: 'bilisum-card' },
+              h('div', { className: 'bilisum-row bilisum-qr-row' },
+                qrImage
+                  ? h('img', { className: 'bilisum-qr', src: qrImage, alt: t('qrAlt') })
+                  : null,
+                h('div', { className: 'bilisum-qr-side' },
+                  h('span', { className: 'bilisum-qr-status' }, qrStatusText()),
+                  qrStatus === 'confirmed'
+                    ? h('span', { className: 'bilisum-qr-done' }, t('qrConfirmed'))
+                    : qrMessage
+                      ? h('span', { className: 'bilisum-muted bilisum-log-error' }, qrMessage)
+                      : h('span', { className: 'bilisum-muted' }, t('qrHint')),
+                  qrStatus === 'expired' || qrStatus === 'error'
+                    ? h('button', {
+                        type: 'button',
+                        className: 'bilisum-button',
+                        onClick: () => void startQrLogin(),
+                      }, t('qrRefresh'))
+                    : null,
+                  h('button', {
+                    type: 'button',
+                    className: 'bilisum-button bilisum-button-quiet',
+                    onClick: cancelQrLogin,
+                  }, t('cancel'))),
+              ),
+            )
+          : null,
+
         h('div', { className: 'bilisum-tabs', role: 'tablist' },
           h('button', {
             type: 'button',
@@ -1549,7 +1995,106 @@ window.__ModuleLoader__.load({
             'aria-selected': viewMode === 'discover' ? 'true' : 'false',
             onClick: () => setViewMode('discover'),
           }, t('tabDiscover')),
+          status?.cookieValid === true
+            ? h('button', {
+              type: 'button',
+              role: 'tab',
+              className: `bilisum-tab${viewMode === 'account' ? ' is-active' : ''}`,
+              'aria-selected': viewMode === 'account' ? 'true' : 'false',
+              onClick: () => setViewMode('account'),
+            }, status.cookieUname || t('tabAccount'))
+            : null,
         ),
+
+        viewMode === 'account' && status?.cookieValid === true
+          ? h('div', { className: 'bilisum-card bilisum-discover' },
+            h('div', { className: 'bilisum-row', role: 'group', 'aria-label': t('tabAccount') },
+              ['favorites', 'watchlater'].map((kind) => h('button', {
+                key: kind,
+                type: 'button',
+                className: `bilisum-tab${accountKind === kind ? ' is-active' : ''}`,
+                'aria-pressed': accountKind === kind,
+                onClick: () => { if (kind !== accountKind) changeAccountList(kind); },
+              }, t(kind === 'favorites' ? 'accountFavorites' : 'accountWatchlater')))),
+            accountPaused || accountOwner !== accountIdentity
+              ? h('span', { className: 'bilisum-muted', role: 'status' }, t('accountLoading'))
+              : h(React.Fragment, null,
+                accountKind === 'favorites'
+                  ? h(React.Fragment, null,
+                    h('div', { className: 'bilisum-row' },
+                      h('select', {
+                        className: 'bilisum-select bilisum-input-grow',
+                        style: { maxWidth: '100%' },
+                        value: accountFolderId,
+                        'aria-label': t('accountFolder'),
+                        disabled: accountFolders.items.length === 0,
+                        onChange: (event) => changeAccountList('favorites', event.target.value),
+                      }, accountFolders.items.length
+                        ? accountFolders.items.map((folder) => h('option', {
+                          key: folder.id, value: String(folder.id),
+                        }, `${folder.title} (${folder.count})`))
+                        : h('option', { value: '' }, t('accountFolder'))),
+                      accountFolders.hasMore && !accountFolders.error
+                        ? h('button', {
+                          type: 'button', className: 'bilisum-button bilisum-button-quiet',
+                          disabled: accountFolders.busy,
+                          onClick: () => void loadAccount('folders'),
+                        }, t('accountFoldersMore')) : null),
+                    accountFolders.busy
+                      ? h('span', { className: 'bilisum-muted', role: 'status' }, t('accountLoading')) : null,
+                    accountFolders.error
+                      ? h('div', { className: 'bilisum-row', role: 'alert' },
+                        h('span', { className: 'bilisum-muted bilisum-log-error' }, accountFolders.error),
+                        h('button', {
+                          type: 'button', className: 'bilisum-button bilisum-button-quiet',
+                          disabled: accountFolders.busy,
+                          onClick: () => void loadAccount('folders', { reset: accountFolders.page === 0 }),
+                        }, t('retry'))) : null,
+                    accountFolders.loaded && !accountFolders.busy && !accountFolders.error && !accountFolders.items.length
+                      ? h('span', { className: 'bilisum-muted' }, t('accountFoldersEmpty')) : null)
+                  : null,
+                accountKind === 'watchlater' || accountFolderId
+                  ? h(React.Fragment, null,
+                    accountVideos.error
+                      ? h('div', { className: 'bilisum-row', role: 'alert' },
+                        h('span', { className: 'bilisum-muted bilisum-log-error' }, accountVideos.error),
+                        h('button', {
+                          type: 'button', className: 'bilisum-button bilisum-button-quiet',
+                          disabled: accountVideos.busy,
+                          onClick: () => void loadAccount('videos', { reset: accountVideos.page === 0 }),
+                        }, t('retry'))) : null,
+                    h('div', { className: 'bilisum-discover-list', 'aria-busy': accountVideos.busy },
+                      videoList(accountVideos.items, accountPicked, toggleAccountPicked),
+                      accountVideos.busy || !accountVideos.loaded
+                        ? h('span', { className: 'bilisum-muted', role: 'status' }, t('accountLoading'))
+                        : !accountVideos.items.length && !accountVideos.error
+                          ? h('span', { className: 'bilisum-muted' },
+                            t(accountKind === 'favorites' ? 'accountFavoritesEmpty' : 'accountWatchlaterEmpty')) : null),
+                    h('div', { className: 'bilisum-row' },
+                      accountVideos.page > 0
+                        ? h('span', { className: 'bilisum-muted' }, t('accountPage').replace('{page}', String(accountVideos.page))) : null,
+                      accountVideos.hasMore && !accountVideos.error
+                        ? h('button', {
+                          type: 'button', className: 'bilisum-button bilisum-button-quiet',
+                          disabled: accountVideos.busy,
+                          onClick: () => void loadAccount('videos'),
+                        }, t('discoverMore')) : null))
+                  : null,
+                actionRow({
+                  primary: probing ? t('probing') : running ? t('running') : t('discoverStart'),
+                  onPrimary: startFromAccount,
+                  busy: running || probing || accountPicked.length === 0,
+                  right: pickedButton(accountPicked),
+                }),
+                pickedPanel({
+                  items: accountVideos.items,
+                  picked: accountPicked,
+                  clear: () => setAccountPicked([]),
+                  remove: (bvid) => setAccountPicked((previous) => previous.filter((item) => item !== bvid)),
+                }),
+                h('span', { className: 'bilisum-actions-hint' }, t('accountQueueHint')),
+                error ? h('span', { className: 'bilisum-log-error bilisum-muted', role: 'alert' }, error) : null))
+          : null,
 
         h('div', {
           className: 'bilisum-card bilisum-discover',
@@ -1610,40 +2155,26 @@ window.__ModuleLoader__.load({
           discoverItems.length === 0
             ? h('span', { className: 'bilisum-discover-empty bilisum-muted' },
               discoverBusy ? t('probing') : t('discoverEmpty'))
-            : discoverItems.map((item) => h('div', {
-              key: item.bvid,
-              className: 'bilisum-discover-row',
-            },
-            item.cover
-              ? h('img', { className: 'bilisum-cover', src: item.cover, alt: '', loading: 'lazy' })
-              : h('span', { className: 'bilisum-cover' }),
-            h('div', { className: 'bilisum-discover-main' },
-              h('div', { className: 'bilisum-discover-title', title: item.title }, item.title),
-              h('div', { className: 'bilisum-discover-meta' },
-                `${item.up}${item.duration ? ` · ${formatDuration(item.duration)}` : ''}`),
-            ),
-            h('button', {
-              type: 'button',
-              className: `bilisum-button${discoverPicked.includes(item.bvid) ? ' bilisum-button-quiet' : ''}`,
-              onClick: () => togglePicked(item.bvid),
-            }, discoverPicked.includes(item.bvid) ? t('discoverAdded') : t('discoverAdd')),
-            )),
+            : videoList(discoverItems, discoverPicked, togglePicked),
         ),
         actionRow({
           primary: t('discoverStart'),
           onPrimary: startFromDiscover,
           busy: running || discoverPicked.length === 0,
           right: h(React.Fragment, null,
-            discoverPicked.length > 0
-              ? h('span', { className: 'bilisum-muted' },
-                t('discoverPicked').replace('{count}', String(discoverPicked.length)))
-              : null,
+            pickedButton(discoverPicked),
             h('button', {
               type: 'button',
               className: 'bilisum-button bilisum-button-quiet',
               disabled: discoverBusy,
               onClick: () => void loadDiscover({}),
             }, t('discoverMore'))),
+        }),
+        pickedPanel({
+          items: discoverItems,
+          picked: discoverPicked,
+          clear: () => setDiscoverPicked([]),
+          remove: (bvid) => setDiscoverPicked((previous) => previous.filter((item) => item !== bvid)),
         }),
         ),
 
@@ -1813,6 +2344,12 @@ window.__ModuleLoader__.load({
                         ?? (rowStatus(row) === 'success' ? '成功' : rowStatus(row) === 'failed' ? '失败' : '处理中'),
                     }, rowStatus(row) === 'success' ? '✓' : rowStatus(row) === 'failed' ? '✕' : '⋯'),
                     h('span', null, `${row.title} · ${row.up ?? ''} · ${row.pubdate ?? ''}`),
+                    h('span', { className: 'bilisum-code' },
+                      `${row.bvid}${Number(row.pageCount) > 1 ? ` P${row.page}` : ''} · ${row.chars ?? 0} 字`),
+                    row.download?.status === 'success'
+                      ? h('span', { className: 'bilisum-code' },
+                        `${megabytes(row.download.bytes)} · ${row.download.vcodec ?? ''}`)
+                      : null,
                     rowStatus(row) === 'failed'
                       ? h('button', {
                         type: 'button',
@@ -1825,14 +2362,6 @@ window.__ModuleLoader__.load({
                       ? h('span', { className: 'bilisum-muted' }, t('retrying'))
                       : null,
                   ),
-                  h('div', { className: 'bilisum-row' },
-                    h('span', { className: 'bilisum-code' },
-                      `${row.bvid}${Number(row.pageCount) > 1 ? ` P${row.page}` : ''} · ${row.chars ?? 0} 字`),
-                    row.download?.status === 'success'
-                      ? h('span', { className: 'bilisum-code' },
-                        `${megabytes(row.download.bytes)} · ${row.download.vcodec ?? ''}`)
-                      : null,
-                  ),
                   row.transcriptPath
                     ? h('div', { className: 'bilisum-row bilisum-path-row' },
                       h('span', { className: 'bilisum-muted' }, `${t('subtitleTag')}：`),
@@ -1841,7 +2370,13 @@ window.__ModuleLoader__.load({
                         type: 'button',
                         className: 'bilisum-button bilisum-button-quiet',
                         onClick: () => reveal(row.transcriptPath),
-                      }, t('openFile')))
+                      }, t('openFile')),
+                      h('button', {
+                        type: 'button',
+                        className: 'bilisum-button bilisum-button-quiet',
+                        title: t('openFolder'),
+                        onClick: () => reveal(parentDir(row.transcriptPath)),
+                      }, t('openFolder')))
                     : null,
                   row.download?.path
                     ? h('div', { className: 'bilisum-row bilisum-path-row' },
@@ -1851,7 +2386,13 @@ window.__ModuleLoader__.load({
                         type: 'button',
                         className: 'bilisum-button bilisum-button-quiet',
                         onClick: () => reveal(row.download.path),
-                      }, t('openFile')))
+                      }, t('openFile')),
+                      h('button', {
+                        type: 'button',
+                        className: 'bilisum-button bilisum-button-quiet',
+                        title: t('openFolder'),
+                        onClick: () => reveal(parentDir(row.download.path)),
+                      }, t('openFolder')))
                     : null,
                   row.download?.status === 'failed'
                     ? h('div', { className: 'bilisum-muted bilisum-log-error' }, row.download.message ?? '')

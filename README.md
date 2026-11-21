@@ -10,6 +10,13 @@ report.
 - **Two ways to pick videos** — paste any text containing `BV…` / `b23.tv`
   links, or search Bilibili and add results from the built-in list.
 - **Subtitles** — CC and AI subtitles, saved as Markdown transcripts.
+- **Top hot comments** — the 5 most-liked comments of each video are fetched
+  together with the subtitles by default and written into the transcript and
+  rendered in the report.
+- **QR scan login** — log in to Bilibili by scanning a QR code; the credential is
+  saved in the DSH credential store and reused for AI subtitles and deeper pages.
+- **Account tab** — browse your Bilibili 收藏夹 (favorites) and 稍后再看 (watch
+  later) and send videos straight to the picker.
 - **Multi-part videos** — real part titles in the picker; only the parts you tick
   are fetched. A link with `?p=5` preselects P5.
 - **Optional video download** — yt-dlp with a codec preference (H.264 first) and
@@ -19,9 +26,11 @@ report.
   split button, or import any OpenAI-compatible endpoint; the structure (pyramid,
   SCQA, Feynman, ...) is chosen automatically from the content type.
 - **Remembered settings** — the output directory survives plugin reloads and restarts.
+- **Open output folder** — one click reveals the output directory in Explorer.
 - **Cancel a running batch** — stop a long collection mid-download.
 - **Bangumi / movie links** — `bangumi/play/ss…` and `…/ep…` pages resolve to
-  their video id, so films and series work like any other video.- **Agent tools** — `bilisum_fetch` and `bilisum_write_report` let the chat model
+  their video id, so films and series work like any other video.
+- **Agent tools** — `bilisum_fetch` and `bilisum_write_report` let the chat model
   fetch and summarize without touching the panel.
 - **Portable state** — the Python environment and the default output live in
   `~/.dsh/bilisum`, never inside the package.
@@ -63,10 +72,11 @@ Set `BILISUM_HOME` to relocate both, or override the interpreter with the
 ## Usage
 
 1. Open **BiliSum** in the sidebar.
-2. Save your Bilibili `SESSDATA` (needed for AI subtitles; without it public
-   videos still work).
+2. Click **扫码登录** and confirm with the Bilibili app (needed for AI subtitles
+   and account lists; without login public videos and public comments still work).
 3. Either paste links and press **开始解析**, or open **搜索视频**, add videos, and
-   press **开始抓取**.
+   press **开始抓取**. The two task checkboxes — subtitles (with top comments) and
+   video download — are both on by default; untick what you don't need.
 4. Ask the agent to “总结这些视频”; it reads the transcripts and writes
    `B站总结_YYYYMMDD_HHMMSS.md`.
 
@@ -77,7 +87,7 @@ Set `BILISUM_HOME` to relocate both, or override the interpreter with the
   B站总结_YYYYMMDD_HHMMSS.md
   bili_task.log
   <series or video name>/
-    subtitles/<part>_<timestamp>.md
+    subtitles/<part>_<timestamp>.md   (transcript + top hot comments)
     videos/<part>_<timestamp>.mp4
 ```
 
@@ -88,16 +98,17 @@ Set `BILISUM_HOME` to relocate both, or override the interpreter with the
 | `outputDir` | Output directory; empty means `~/.dsh/bilisum/bilibili_summaries`. |
 | `pythonPath` | Interpreter to use instead of the managed venv. |
 
-`SESSDATA` is stored in the DSH credential store, not in configuration files.
+`SESSDATA` is obtained via QR scan login and stored in the DSH credential store,
+not in configuration files.
 
 ## Troubleshooting
 
 - **“Python 环境不可用”** — run `node scripts/setup-env.js` in the package
   directory, or install Python 3.10+ and let the plugin retry.
-- **Subtitles fail with “需要登录态”** — the cookie expired; paste a fresh
-  `SESSDATA`.
+- **Subtitles fail with “需要登录态”** — the login expired; scan the QR code
+  again on the login card.
 - **Search returns `-412`** — Bilibili rate limits the search endpoint; wait a
-  minute, or configure the cookie and retry.
+  minute, or log in again and retry.
 
 ## Development
 
